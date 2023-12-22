@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ESP32 WebSocket Server</title>
+    <link rel="icon" href="data:,">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+
+        .topnav {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .content {
+            padding: 30px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: #ecf0f1;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .button {
+            padding: 20px 60px;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            color: #fff;
+            background-color: #2ecc71; /* green */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #27ae60; /* darker green on hover */
+        }
+
+        .button:active {
+            background-color: #218c58; /* even darker green on click */
+            transform: translateY(2px);
+        }
+
+        .state {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topnav">
+        <h1>ESP32 WebSocket Server</h1>
+    </div>
+    <div class="content">
+        <div class="card">
+            <h2>ONBOARD LED GPIO2</h2>
+            <p><button id="button" class="button">Toggle LED</button></p>
+            <p class="state">State: <span id="state">%s</span></p>
+        </div>
+    </div>
+    <script>
+        var gateway = `ws://${window.location.hostname}/ws`;
+        var websocket;
+        window.addEventListener('load', onLoad);
+        function initWebSocket() {
+            console.log('Trying to open a WebSocket connection...');
+            websocket = new WebSocket(gateway);
+            websocket.onopen = onOpen;
+            websocket.onclose = onClose;
+            websocket.onmessage = onMessage; // <-- add this line
+        }
+        function onOpen(event) {
+            console.log('Connection opened');
+        }
+        function onClose(event) {
+            console.log('Connection closed');
+            setTimeout(initWebSocket, 2000);
+        }
+        function onMessage(event) {
+            var state;
+            console.log(event.data);
+            if (event.data == "1") {
+                state = "ON";
+            }
+            else {
+                state = "OFF";
+            }
+            document.getElementById('state').innerHTML = state;
+        }
+        function onLoad(event) {
+            initWebSocket();
+            initButton();
+        }
+        function initButton() {
+            document.getElementById('button').addEventListener('click', toggle);
+        }
+        function toggle() {
+            websocket.send('toggle');
+        }
+    </script>
+</body>
+
+</html>
